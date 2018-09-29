@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project( pd3 )
+find_package( OpenCV REQUIRED )
+add_executable( pd3 main.cpp )
+target_link_libraries( pd3 ${OpenCV_LIBS} )

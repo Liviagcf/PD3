@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <math.h>
+#include "opencv2/ximgproc/disparity_filter.hpp"
 
 
 using namespace std;
@@ -45,16 +46,16 @@ void encontraMaioreTransforma(Mat* image){
 
 
 void requisito1(){
-	Mat aloeR, aloeL, babyR, babyL, disp;
-	int W = 7;
-	StereoBM stereo;
+	Mat aloeR, aloeL, babyR, babyL, right_disp, left_disp, ldisp, rdisp;
+	int N_DISP = 64, W = 5;
+	Ptr<StereoBM> stereo;
 
 	aloeR = imread("../data/aloeR.png");
 	aloeL = imread("../data/aloeL.png");
 	babyR = imread("../data/babyR.png");
 	babyL = imread("../data/babyL.png");
 
-	/*cout << "Digite o tamanho da janela: ";
+	/*cout << "Digite o tamanho da janela: ";s
 	cin >> W;
 	if(W < 5)
 		W = 5;
@@ -66,13 +67,20 @@ void requisito1(){
 	cvtColor(aloeL, aloeL,COLOR_RGB2GRAY, 0);
 	cvtColor(aloeR, aloeR,COLOR_RGB2GRAY, 0);
 
-	stereo = StereoBM(CV_STEREO_BM_BASIC,32, W);  //não sei muito bem o que o sengundo parâmetro faz, mas muda algumas coisas na matriz disp
-	stereo.operator()(aloeL,aloeR,disp,CV_32F);
+	stereo = StereoBM::create(N_DISP, W);  //não sei muito bem o que o sengundo parâmetro faz, mas muda algumas coisas na matriz disp
+	stereo->compute(aloeL,aloeR,left_disp);
+	//stereo->compute(aloeR, aloeL, right_disp);
 
-	imwrite("../data/aloe_disp.png", disp);
+	normalize(left_disp, ldisp, 0, 256, cv::NORM_MINMAX, CV_8U);	
+	normalize(right_disp, rdisp, 0, 256, cv::NORM_MINMAX, CV_8U);
 
-	namedWindow("Disparidade", WINDOW_AUTOSIZE);
-	imshow("Disparidade", disp);
+	imwrite("../data/aloe_disp.png", ldisp);
+
+	namedWindow("Disparidade", WINDOW_NORMAL);
+	namedWindow("Disparidade2", WINDOW_NORMAL);
+	imshow("Disparidade", ldisp);
+	//imshow("Disparidade2", rdisp);
+
 	waitKey(0);
 
 }

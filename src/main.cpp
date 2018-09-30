@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <math.h>
+#include "opencv2/ximgproc/disparity_filter.hpp"
 
 
 using namespace std;

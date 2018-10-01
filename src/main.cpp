@@ -91,6 +91,16 @@ void createDisparity(){
 	minMaxLoc(disp, &min, &max);
 	disp.convertTo(normalized_disp, CV_8U, 255/(max-min), -255*min/(max-min));
 
+	cout << "min = "<< min << " max = " << max << endl;
+
+	for(int j = 0; j < disp.rows ; j++){
+		for(int i = 0; i < disp.cols ; i++){
+			short m;
+			m = disp.at<short>(j, i);
+			cout << (int)m << endl;
+		}
+	}
+
 	imwrite("../data/aloe_disp.png", normalized_disp);
 
 	namedWindow("Disparidade", WINDOW_NORMAL);

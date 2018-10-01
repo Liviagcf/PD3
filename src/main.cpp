@@ -22,6 +22,22 @@ void calculaCoordenadas(int xl, int xr, int yl, int yr){
 
 }
 
+
+Mat EncontraCorrelacao(Mat imgL, Mat disp){
+
+	Mat corr;		//Matriz que possui a coordenada x da outra imagem correspondente a cada pixel da imagem atual
+
+	for(j = 0; j < imgL.rows ; j++){
+		for(i = 0; i < imgL.cols ; i++){
+			corr.at<uchar>(j, i) = i + (int)disp.at<uchar>(j, i);
+		}
+	}
+
+	return corr;
+
+}
+
+
 //encontra o maior valor de distância e transforma pra 255, e os outros valores ficam proporcionais a isso
 void encontraMaioreTransforma(Mat* image){
 

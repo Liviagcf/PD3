@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <math.h>
-#include "opencv2/ximgproc/disparity_filter.hpp"
 
 
 using namespace std;
@@ -27,8 +26,8 @@ Mat EncontraCorrelacao(Mat imgL, Mat disp){
 
 	Mat corr;		//Matriz que possui a coordenada x da outra imagem correspondente a cada pixel da imagem atual
 
-	for(j = 0; j < imgL.rows ; j++){
-		for(i = 0; i < imgL.cols ; i++){
+	for(int j = 0; j < imgL.rows ; j++){
+		for(int i = 0; i < imgL.cols ; i++){
 			corr.at<uchar>(j, i) = i + (int)disp.at<uchar>(j, i);
 		}
 	}
@@ -61,7 +60,52 @@ void encontraMaioreTransforma(Mat* image){
 }
 
 
+void createDisparity(){
+	int minDisparity = 0;
+	int numDisparities = 128;
+	int SADWindowSize = 5;
+	int P1 = 600;
+	int P2 = 2400;
+	int disp12MaxDiff = 20;
+	int preFilterCap = 16;
+	int uniquenessRatio = 1;
+	int speckleWindowSize = 100;
+	int speckleRange = 20;
+	double min, max;
+
+	Mat aloeR, aloeL, babyR, babyL, disp, normalized_disp;
+
+
+	aloeR = imread("../data/aloeR.png");
+	aloeL = imread("../data/aloeL.png");
+	babyR = imread("../data/babyR.png");
+	babyL = imread("../data/babyL.png");
+
+	cvtColor(aloeL, aloeL,COLOR_RGB2GRAY, 0);
+	cvtColor(aloeR, aloeR,COLOR_RGB2GRAY, 0);
+
+	Ptr<StereoSGBM> stereo_sgbm = StereoSGBM::create(minDisparity, numDisparities, SADWindowSize, P1, P2, disp12MaxDiff, preFilterCap, uniquenessRatio, speckleWindowSize, speckleRange, false);
+	stereo_sgbm->compute(aloeL,aloeR,disp);
+
+	//Normalizacao
+	minMaxLoc(disp, &min, &max);
+	disp.convertTo(normalized_disp, CV_8U, 255/(max-min), -255*min/(max-min));
+
+	imwrite("../data/aloe_disp.png", normalized_disp);
+
+	namedWindow("Disparidade", WINDOW_NORMAL);
+	imshow("Disparidade", normalized_disp);
+	namedWindow("Real", WINDOW_NORMAL);
+	imshow("Real", disp);
+
+
+	waitKey(0);
+
+
+}
+
 void requisito1(){
+	/*
 	Mat aloeR, aloeL, babyR, babyL, right_disp, left_disp, ldisp, rdisp;
 	int N_DISP = 64, W = 5;
 	Ptr<StereoBM> stereo;
@@ -76,7 +120,7 @@ void requisito1(){
 	if(W < 5)
 		W = 5;
 	else if(W%2 == 0)
-		W++;*/
+		W++;
 
 
 	//Parece que calcula a distância dos pixels entre as duas imagens
@@ -97,7 +141,9 @@ void requisito1(){
 	imshow("Disparidade", ldisp);
 	//imshow("Disparidade2", rdisp);
 
-	waitKey(0);
+	waitKey(0);*/
+
+	createDisparity();
 
 }
 

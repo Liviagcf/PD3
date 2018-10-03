@@ -61,7 +61,7 @@ void encontraMaioreTransforma(Mat* image){
 
 
 void createDisparity(){
-	int minDisparity = 0;
+	int minDisparity = 1;
 	int numDisparities = 128;
 	int SADWindowSize = 5;
 	int P1 = 600;
@@ -87,19 +87,24 @@ void createDisparity(){
 	Ptr<StereoSGBM> stereo_sgbm = StereoSGBM::create(minDisparity, numDisparities, SADWindowSize, P1, P2, disp12MaxDiff, preFilterCap, uniquenessRatio, speckleWindowSize, speckleRange, false);
 	stereo_sgbm->compute(aloeL,aloeR,disp);
 
+	// A saida do disparity map é uma matriz em que cada elemento possui 16bits sinalizados, sendo os 4 ultimos fracionais
+	// Vamos ignorar os bits fracionais.
+	Mat disp2 = Mat(disp.rows, disp.cols, CV_8U);
+	for(int j = 0; j < disp.rows ; j++){
+		for(int i = 0; i < disp.cols ; i++){
+			short int m; 
+			m = disp.at<short int>(j, i);
+			m = m/16; // multiplica por 16 para ignorar os últimos 4 bits
+			disp2.at<char>(j,i) = m;
+		}
+	}
+
 	//Normalizacao
-	minMaxLoc(disp, &min, &max);
-	disp.convertTo(normalized_disp, CV_8U, 255/(max-min), -255*min/(max-min));
+	minMaxLoc(disp2, &min, &max);
+	disp2.convertTo(normalized_disp, CV_8U, 255/(max-min), -255*min/(max-min));
 
 	cout << "min = "<< min << " max = " << max << endl;
 
-	for(int j = 0; j < disp.rows ; j++){
-		for(int i = 0; i < disp.cols ; i++){
-			short m;
-			m = disp.at<short>(j, i);
-			cout << (int)m << endl;
-		}
-	}
 
 	imwrite("../data/aloe_disp.png", normalized_disp);
 
@@ -107,6 +112,9 @@ void createDisparity(){
 	imshow("Disparidade", normalized_disp);
 	namedWindow("Real", WINDOW_NORMAL);
 	imshow("Real", disp);
+
+	namedWindow("Real2", WINDOW_NORMAL);
+	imshow("Real2", disp2);
 
 
 	waitKey(0);

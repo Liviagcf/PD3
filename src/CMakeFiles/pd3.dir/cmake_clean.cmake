@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/pd3.dir/main.cpp.o"
+  "CMakeFiles/pd3.dir/controller.cpp.o"
   "pd3.pdb"
   "pd3"
 )

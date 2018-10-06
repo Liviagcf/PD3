@@ -123,6 +123,33 @@ pd3/fast:
 	$(MAKE) -f CMakeFiles/pd3.dir/build.make CMakeFiles/pd3.dir/build
 .PHONY : pd3/fast
 
+controller.o: controller.cpp.o
+
+.PHONY : controller.o
+
+# target to build an object file
+controller.cpp.o:
+	$(MAKE) -f CMakeFiles/pd3.dir/build.make CMakeFiles/pd3.dir/controller.cpp.o
+.PHONY : controller.cpp.o
+
+controller.i: controller.cpp.i
+
+.PHONY : controller.i
+
+# target to preprocess a source file
+controller.cpp.i:
+	$(MAKE) -f CMakeFiles/pd3.dir/build.make CMakeFiles/pd3.dir/controller.cpp.i
+.PHONY : controller.cpp.i
+
+controller.s: controller.cpp.s
+
+.PHONY : controller.s
+
+# target to generate assembly for a file
+controller.cpp.s:
+	$(MAKE) -f CMakeFiles/pd3.dir/build.make CMakeFiles/pd3.dir/controller.cpp.s
+.PHONY : controller.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -159,6 +186,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... pd3"
+	@echo "... controller.o"
+	@echo "... controller.i"
+	@echo "... controller.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

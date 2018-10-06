@@ -4,6 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/natalia/PVC/PD3/src/controller.cpp" "/home/natalia/PVC/PD3/src/CMakeFiles/pd3.dir/controller.cpp.o"
   "/home/natalia/PVC/PD3/src/main.cpp" "/home/natalia/PVC/PD3/src/CMakeFiles/pd3.dir/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")

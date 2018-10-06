@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <math.h>
+#include "controller.hpp"
 
 
 using namespace std;
@@ -12,14 +13,211 @@ using namespace cv;
 #define b 160	//baseline em mm
 
 
-void calculaCoordenadas(int xl, int xr, int yl, int yr){
-	double X,Y,Z;
 
-	X = ( b*(xl+xr) )/( 2*(xl-xr) );
-	Y = ( b*(yl+yr) )/( 2*(xl-xr) );
-	Z = ( b*f )/( 2*(xl-xr) );
+Mat disp, disp2, Rview, Lview, normalized_disp, depth;
+
+// mouseClick é responsável por identificar as coordenadas do pixel desejado. 
+void mouseClick(int event, int x, int y, int flags, void* userdata){
+	int i;
+    Controller *controller = (Controller*)userdata;
+
+    if  ( event == EVENT_LBUTTONDOWN ){
+    	if(controller->clicks < 10){
+    		Vec2f point = (x,y);
+    		controller->points.push_back(point);
+    		++controller->clicks;
+    	}
+    	cout << controller->windowsName << " " << controller->points.size() << endl;
+    }
 
 }
+
+void requisito2(){
+	Controller Lview, Rview;
+
+	Lview.image = imread("../data/MorpheusL.jpg");
+	Rview.image = imread("../data/MorpheusR.jpg");
+
+	if(!Lview.image.data || !Rview.image.data){
+        cout << endl << "Nao foi possivel abrir imagem ou ela não está nessa pasta!" << endl;
+        while (cin.get() != '\n');
+        return;
+    }
+
+    Lview.windowsName = "Lview";
+    Rview.windowsName = "Rview";
+
+    namedWindow(Lview.windowsName, WINDOW_NORMAL);
+	imshow(Lview.windowsName, Lview.image);
+
+	namedWindow(Rview.windowsName, WINDOW_NORMAL);
+	imshow(Rview.windowsName, Rview.image);
+
+	setMouseCallback(Lview.windowsName, mouseClick, &Lview);
+
+	setMouseCallback(Rview.windowsName, mouseClick, &Rview);
+
+    while(Lview.points.size() < 10 || Rview.points.size() < 10){
+   		waitKey(100);
+	}
+
+	vector<cv::Vec3f> lines1, lines2;
+
+	Mat F = findFundamentalMat(Rview.points, Lview.points, FM_RANSAC, 3, 0.99);
+
+	Size size;
+
+	size = F.size();
+
+	cout << size;
+	/*computeCorrespondEpilines(Rview.points, 1, F, lines1);
+	computeCorrespondEpilines(Lview.points, 2, F, lines2);
+
+
+	Scalar color(255,255,255);
+ 	for(int i=0; i<lines1.size(); i++){
+	    line(Lview.image,Point(0,-lines1[i][2]/lines1[i][1]),Point(Lview.image.cols,-(lines1[i][2]+lines1[i][0]*Lview.image.cols)/lines1[i][1]),color);
+
+	 	line(Rview.image,Point(0,-lines2[i][2]/lines2[i][1]),Point(Rview.image.cols,-(lines2[i][2]+lines2[i][0]*Rview.image.cols)/lines2[i][1]),color);
+
+	}
+*/
+	namedWindow(Lview.windowsName, WINDOW_NORMAL);
+	imshow(Lview.windowsName, Lview.image);
+
+	namedWindow(Rview.windowsName, WINDOW_NORMAL);
+	imshow(Rview.windowsName, Rview.image);
+
+}
+
+
+vector<float> getWorldCoordinates(float xl, float xr, float yl, float yr){
+	float X,Y,Z;
+	float max;
+	vector<float> objectPoint;
+
+	if( (xl-xr) == 0){
+			X=-1;
+			Y=-1;
+			Z=-1;
+	}
+	else{
+		X = ( b*(xl+xr) )/( 2*(xl-xr) );
+		Y = ( b*(yl+yr) )/( 2*(xl-xr) );
+		Z = ( b*f )/( 2*(xl-xr) );
+	}
+
+	objectPoint.push_back(X);
+	objectPoint.push_back(Y);
+	objectPoint.push_back(Z);
+	return objectPoint;
+}
+
+
+void createDepth(){
+	int min = 10000000, max = 0;
+
+	depth = Mat(disp.rows, disp.cols, CV_32S);
+	Mat normalized_depth;
+	float xl, xr, yl, yr;
+	int Z;
+
+	for(int j = 0; j < disp.rows; ++j){
+		for(int i = 0; i < disp.cols; ++i){
+
+			xl = i;
+			xr = i - (int)disp2.at<uchar>(j, i);
+			yl = j;
+			yr = yl;
+			vector<float> objectPoint = getWorldCoordinates(xl, xr, yl, yr);
+			depth.at<int>(j,i) = objectPoint[2];
+			if(objectPoint[2] < min){
+				min = objectPoint[2];
+			}
+			if(objectPoint[2] > max){
+				max = objectPoint[2];
+			}
+		}
+	}
+	namedWindow("Profundidade2", WINDOW_NORMAL);
+	imshow("Profundidade2", depth);
+	namedWindow("disp", WINDOW_NORMAL);
+	imshow("disp", disp2);
+	cout << "min = "<< min << " max = " << max << endl;
+	normalized_depth = Mat(disp.rows, disp.cols, CV_8U);
+
+	for(int j = 0; j<disp.rows; ++j){
+		for(int i = 0; i<disp.cols; ++i){
+			normalized_depth.at<char>(j,i) = depth.at<int>(j,i)*255/(max-min) - 255*min/(max-min);
+		}
+	}
+
+	//minMaxLoc(depth, &min, &max);
+	cout << "min = "<< min << " max = " << max << endl;
+
+	//depth.convertTo(normalized_depth, CV_16S, -255/(max-min), 255*min/(max-min));
+	namedWindow("Profundidade", WINDOW_NORMAL);
+	imshow("Profundidade", normalized_depth);
+
+	;
+	//minMaxLoc(normalized_depth, &min, &max);
+	cout << "min = "<< min << " max = " << max << endl;
+
+	waitKey(0);
+}
+
+
+void createDisparity(){
+	int minDisparity = 10;
+	int numDisparities = 128;
+	int SADWindowSize = 5;
+	int P1 = 600;
+	int P2 = 2400;
+	int disp12MaxDiff = 20;
+	int preFilterCap = 16;
+	int uniquenessRatio = 5;
+	int speckleWindowSize = 100;
+	int speckleRange = 20;
+	double min, max;
+
+
+	Rview = imread("../data/babyR.png");
+	Lview = imread("../data/babyL.png");
+
+	cvtColor(Lview, Lview,COLOR_RGB2GRAY, 0);
+	cvtColor(Rview, Rview,COLOR_RGB2GRAY, 0);
+
+	Ptr<StereoSGBM> stereo_sgbm = StereoSGBM::create(minDisparity, numDisparities, SADWindowSize, P1, P2, disp12MaxDiff, preFilterCap, uniquenessRatio, speckleWindowSize, speckleRange, false);
+	stereo_sgbm->compute(Lview,Rview,disp);
+
+	// A saida do disparity map é uma matriz em que cada elemento possui 16bits sinalizados, sendo os 4 ultimos fracionais
+	// Vamos ignorar os bits fracionais.
+	disp2 = Mat(disp.rows, disp.cols, CV_8U);
+
+	for(int j = 0; j < disp.rows ; j++){
+		for(int i = 0; i < disp.cols ; i++){
+			short int m; 
+			m = disp.at<short int>(j, i);
+			m = m/16; // divide por 16 para ignorar os últimos 4 bits
+			disp2.at<char>(j,i) = m;
+		}
+	}
+
+	//Normalizacao
+	minMaxLoc(disp2, &min, &max);
+	cout << "min = "<< min << " max = " << max << endl;
+	disp2.convertTo(normalized_disp, CV_8U, 255/(max-min), -255*min/(max-min));
+
+	imwrite("../data/aloe_disp.png", normalized_disp);
+	namedWindow("Disparidade", WINDOW_NORMAL);
+	imshow("Disparidade", normalized_disp);
+	namedWindow("Real", WINDOW_NORMAL);
+	imshow("Real", disp2);
+	waitKey(0);
+
+	destroyAllWindows();
+}
+
 
 
 Mat EncontraCorrelacao(Mat imgL, Mat disp){
@@ -59,122 +257,13 @@ void encontraMaioreTransforma(Mat* image){
 
 }
 
-
-void createDisparity(){
-	int minDisparity = 1;
-	int numDisparities = 128;
-	int SADWindowSize = 5;
-	int P1 = 600;
-	int P2 = 2400;
-	int disp12MaxDiff = 20;
-	int preFilterCap = 16;
-	int uniquenessRatio = 1;
-	int speckleWindowSize = 100;
-	int speckleRange = 20;
-	double min, max;
-
-	Mat aloeR, aloeL, babyR, babyL, disp, normalized_disp;
-
-
-	aloeR = imread("../data/aloeR.png");
-	aloeL = imread("../data/aloeL.png");
-	babyR = imread("../data/babyR.png");
-	babyL = imread("../data/babyL.png");
-
-	cvtColor(aloeL, aloeL,COLOR_RGB2GRAY, 0);
-	cvtColor(aloeR, aloeR,COLOR_RGB2GRAY, 0);
-
-	Ptr<StereoSGBM> stereo_sgbm = StereoSGBM::create(minDisparity, numDisparities, SADWindowSize, P1, P2, disp12MaxDiff, preFilterCap, uniquenessRatio, speckleWindowSize, speckleRange, false);
-	stereo_sgbm->compute(aloeL,aloeR,disp);
-
-	// A saida do disparity map é uma matriz em que cada elemento possui 16bits sinalizados, sendo os 4 ultimos fracionais
-	// Vamos ignorar os bits fracionais.
-	Mat disp2 = Mat(disp.rows, disp.cols, CV_8U);
-	for(int j = 0; j < disp.rows ; j++){
-		for(int i = 0; i < disp.cols ; i++){
-			short int m; 
-			m = disp.at<short int>(j, i);
-			m = m/16; // multiplica por 16 para ignorar os últimos 4 bits
-			disp2.at<char>(j,i) = m;
-		}
-	}
-
-	//Normalizacao
-	minMaxLoc(disp2, &min, &max);
-	disp2.convertTo(normalized_disp, CV_8U, 255/(max-min), -255*min/(max-min));
-
-	cout << "min = "<< min << " max = " << max << endl;
-
-
-	imwrite("../data/aloe_disp.png", normalized_disp);
-
-	namedWindow("Disparidade", WINDOW_NORMAL);
-	imshow("Disparidade", normalized_disp);
-	namedWindow("Real", WINDOW_NORMAL);
-	imshow("Real", disp);
-
-	namedWindow("Real2", WINDOW_NORMAL);
-	imshow("Real2", disp2);
-
-
-	waitKey(0);
-
-
-}
-
 void requisito1(){
-	/*
-	Mat aloeR, aloeL, babyR, babyL, right_disp, left_disp, ldisp, rdisp;
-	int N_DISP = 64, W = 5;
-	Ptr<StereoBM> stereo;
-
-	aloeR = imread("../data/aloeR.png");
-	aloeL = imread("../data/aloeL.png");
-	babyR = imread("../data/babyR.png");
-	babyL = imread("../data/babyL.png");
-
-	/*cout << "Digite o tamanho da janela: ";s
-	cin >> W;
-	if(W < 5)
-		W = 5;
-	else if(W%2 == 0)
-		W++;
-
-
-	//Parece que calcula a distância dos pixels entre as duas imagens
-	cvtColor(aloeL, aloeL,COLOR_RGB2GRAY, 0);
-	cvtColor(aloeR, aloeR,COLOR_RGB2GRAY, 0);
-
-	stereo = StereoBM::create(N_DISP, W);  //não sei muito bem o que o sengundo parâmetro faz, mas muda algumas coisas na matriz disp
-	stereo->compute(aloeL,aloeR,left_disp);
-	//stereo->compute(aloeR, aloeL, right_disp);
-
-	normalize(left_disp, ldisp, 0, 256, cv::NORM_MINMAX, CV_8U);	
-	normalize(right_disp, rdisp, 0, 256, cv::NORM_MINMAX, CV_8U);
-
-	imwrite("../data/aloe_disp.png", ldisp);
-
-	namedWindow("Disparidade", WINDOW_NORMAL);
-	namedWindow("Disparidade2", WINDOW_NORMAL);
-	imshow("Disparidade", ldisp);
-	//imshow("Disparidade2", rdisp);
-
-	waitKey(0);*/
-
 	createDisparity();
-
+	createDepth();
 }
-
-void requisito2(){
-	/*cv::Mat R1, R2, P1, P2, Q;
-	stereoRectify(K1, D1, K2, D2, img1.size(), R, T, R1, R2, P1, P2, Q);
-	https://sourishghosh.com/2016/stereo-calibration-cpp-opencv/ */
-}
-
-
 
 
 int main(){
-	requisito1();
+	requisito2();
 }
 

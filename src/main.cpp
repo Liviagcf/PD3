@@ -164,6 +164,7 @@ void createDisparity(){
 void requisito2(){
 	Controller Lcamera, Rcamera;
 
+	//Inicializando os dados
 	Lcamera.image = imread("../data/MorpheusL.jpg");
 	Rcamera.image = imread("../data/MorpheusR.jpg");
 
@@ -172,10 +173,18 @@ void requisito2(){
         while (cin.get() != '\n');
         return;
     }
-
     Lcamera.windowsName = "Lcamera";
     Rcamera.windowsName = "Rcamera";
 
+    Lcamera.intrinsics = (Mat_<double>(3,3) << 6704.926882, 0,000103, 738.251932, 0, 6705.241311, 457.560286, 0, 0, 1);
+    Rcamera.intrinsics = (Mat_<double>(3,3) << 6682.125964, 0.000101, 875.207200, 0, 6681.475962, 357.700292, 0, 0, 1);
+
+    Lcamera.rotation  = (Mat_<double>(3,3) << 0.70717199,  0.70613396, -0.03581348, 0.28815232, -0.33409066, -0.89741388 ,-0.64565936,  0.62430623, -0.43973369);
+    Lcamera.rotation  = (Mat_<double>(3,3) << 0.48946344,  0.87099159, -0.04241701 ,0.33782142, -0.23423702, -0.91159734 ,-0.80392924,  0.43186419, -0.40889007);
+
+    Lcamera.translation = (Mat_<double>(3,1) << -532.285900 , 207.183600 , 2977.408000);
+    Lcamera.translation = (Mat_<double>(3,1) << -614.549000 , 193.240700 , 3242.754000);
+    
     namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
 	imshow(Lcamera.windowsName, Lcamera.image);
 
@@ -190,10 +199,9 @@ void requisito2(){
    		waitKey(100);
 	}
 
-
-
 	cout<<"saiu"<<endl;
 
+/*
 	//Calcula epilines (funciona parcialmente)
 	vector<cv::Vec3f> lines1, lines2;
 
@@ -201,15 +209,15 @@ void requisito2(){
 
 	Mat H1, H2;
 
-	H1 = findHomography(Rcamera.points, Lcamera.points, CV_RANSAC, 3);
-	//stereoRectifyUncalibrated(Lcamera.points, Rcamera.points, F, Lcamera.image.size(), H1, H2, 5);
+	//H1 = findHomography(Lcamera.points, Rcamera.points, CV_RANSAC, 3);
+	stereoRectifyUncalibrated(Lcamera.points, Rcamera.points, F, Lcamera.image.size(), H1, H2, 5);
 
 	Mat Ldst, Rdst;
 
 	warpPerspective(Rcamera.image, Rdst, H1, Rcamera.image.size(), INTER_LINEAR , BORDER_TRANSPARENT);
 	//warpPerspective(Lcamera.image, Ldst, H2, Rcamera.image.size());
 
-	/*computeCorrespondEpilines(Rcamera.points, 1, F, lines1);
+	computeCorrespondEpilines(Rcamera.points, 1, F, lines1);
 	computeCorrespondEpilines(Lcamera.points, 2, F, lines2);
 
 
@@ -218,8 +226,9 @@ void requisito2(){
 	    line(Lcamera.image,Point(0,-lines1[i][2]/lines1[i][1]),Point(Lcamera.image.cols,-(lines1[i][2]+lines1[i][0]*Lcamera.image.cols)/lines1[i][1]),color);
 
 	 	line(Rcamera.image,Point(0,-lines2[i][2]/lines2[i][1]),Point(Rcamera.image.cols,-(lines2[i][2]+lines2[i][0]*Rcamera.image.cols)/lines2[i][1]),color);
+	}
 
-	}*/
+
 	namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
 	imshow(Lcamera.windowsName, Lcamera.image);
 
@@ -236,7 +245,7 @@ void requisito2(){
 
 
 	waitKey(0);
-	createDisparity();
+	//createDisparity();*/
 }
 
 

@@ -23,7 +23,7 @@ void mouseClick(int event, int x, int y, int flags, void* userdata){
 
     if  ( event == EVENT_LBUTTONDOWN ){
     	if(controller->clicks < 10){
-    		Vec2f point = (x,y);
+    		Point2f point = Point2f(x,y);
     		controller->points.push_back(point);
     		++controller->clicks;
     	}
@@ -32,63 +32,6 @@ void mouseClick(int event, int x, int y, int flags, void* userdata){
 
 }
 
-void requisito2(){
-	Controller Lview, Rview;
-
-	Lview.image = imread("../data/MorpheusL.jpg");
-	Rview.image = imread("../data/MorpheusR.jpg");
-
-	if(!Lview.image.data || !Rview.image.data){
-        cout << endl << "Nao foi possivel abrir imagem ou ela não está nessa pasta!" << endl;
-        while (cin.get() != '\n');
-        return;
-    }
-
-    Lview.windowsName = "Lview";
-    Rview.windowsName = "Rview";
-
-    namedWindow(Lview.windowsName, WINDOW_NORMAL);
-	imshow(Lview.windowsName, Lview.image);
-
-	namedWindow(Rview.windowsName, WINDOW_NORMAL);
-	imshow(Rview.windowsName, Rview.image);
-
-	setMouseCallback(Lview.windowsName, mouseClick, &Lview);
-
-	setMouseCallback(Rview.windowsName, mouseClick, &Rview);
-
-    while(Lview.points.size() < 10 || Rview.points.size() < 10){
-   		waitKey(100);
-	}
-
-	vector<cv::Vec3f> lines1, lines2;
-
-	Mat F = findFundamentalMat(Rview.points, Lview.points, FM_RANSAC, 3, 0.99);
-
-	Size size;
-
-	size = F.size();
-
-	cout << size;
-	/*computeCorrespondEpilines(Rview.points, 1, F, lines1);
-	computeCorrespondEpilines(Lview.points, 2, F, lines2);
-
-
-	Scalar color(255,255,255);
- 	for(int i=0; i<lines1.size(); i++){
-	    line(Lview.image,Point(0,-lines1[i][2]/lines1[i][1]),Point(Lview.image.cols,-(lines1[i][2]+lines1[i][0]*Lview.image.cols)/lines1[i][1]),color);
-
-	 	line(Rview.image,Point(0,-lines2[i][2]/lines2[i][1]),Point(Rview.image.cols,-(lines2[i][2]+lines2[i][0]*Rview.image.cols)/lines2[i][1]),color);
-
-	}
-*/
-	namedWindow(Lview.windowsName, WINDOW_NORMAL);
-	imshow(Lview.windowsName, Lview.image);
-
-	namedWindow(Rview.windowsName, WINDOW_NORMAL);
-	imshow(Rview.windowsName, Rview.image);
-
-}
 
 
 vector<float> getWorldCoordinates(float xl, float xr, float yl, float yr){
@@ -181,8 +124,8 @@ void createDisparity(){
 	double min, max;
 
 
-	Rview = imread("../data/babyR.png");
-	Lview = imread("../data/babyL.png");
+	//Rview = imread("Limage.jpg");
+	//Lview = imread("Rimage.jpg");
 
 	cvtColor(Lview, Lview,COLOR_RGB2GRAY, 0);
 	cvtColor(Rview, Rview,COLOR_RGB2GRAY, 0);
@@ -218,6 +161,83 @@ void createDisparity(){
 	destroyAllWindows();
 }
 
+void requisito2(){
+	Controller Lcamera, Rcamera;
+
+	Lcamera.image = imread("../data/MorpheusL.jpg");
+	Rcamera.image = imread("../data/MorpheusR.jpg");
+
+	if(!Lcamera.image.data || !Rcamera.image.data){
+        cout << endl << "Nao foi possivel abrir imagem ou ela não está nessa pasta!" << endl;
+        while (cin.get() != '\n');
+        return;
+    }
+
+    Lcamera.windowsName = "Lcamera";
+    Rcamera.windowsName = "Rcamera";
+
+    namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
+	imshow(Lcamera.windowsName, Lcamera.image);
+
+	namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
+	imshow(Rcamera.windowsName, Rcamera.image);
+
+	setMouseCallback(Lcamera.windowsName, mouseClick, &Lcamera);
+
+	setMouseCallback(Rcamera.windowsName, mouseClick, &Rcamera);
+
+    while(Lcamera.points.size() < 4 || Rcamera.points.size() < 4){
+   		waitKey(100);
+	}
+
+
+
+	cout<<"saiu"<<endl;
+
+	//Calcula epilines (funciona parcialmente)
+	vector<cv::Vec3f> lines1, lines2;
+
+	Mat F = findFundamentalMat(Lcamera.points, Rcamera.points, FM_RANSAC, 3, 0.99);
+
+	Mat H1, H2;
+
+	H1 = findHomography(Rcamera.points, Lcamera.points, CV_RANSAC, 3);
+	//stereoRectifyUncalibrated(Lcamera.points, Rcamera.points, F, Lcamera.image.size(), H1, H2, 5);
+
+	Mat Ldst, Rdst;
+
+	warpPerspective(Rcamera.image, Rdst, H1, Rcamera.image.size(), INTER_LINEAR , BORDER_TRANSPARENT);
+	//warpPerspective(Lcamera.image, Ldst, H2, Rcamera.image.size());
+
+	/*computeCorrespondEpilines(Rcamera.points, 1, F, lines1);
+	computeCorrespondEpilines(Lcamera.points, 2, F, lines2);
+
+
+	Scalar color(0,0,255);
+ 	for(int i=0; i<lines1.size(); i++){
+	    line(Lcamera.image,Point(0,-lines1[i][2]/lines1[i][1]),Point(Lcamera.image.cols,-(lines1[i][2]+lines1[i][0]*Lcamera.image.cols)/lines1[i][1]),color);
+
+	 	line(Rcamera.image,Point(0,-lines2[i][2]/lines2[i][1]),Point(Rcamera.image.cols,-(lines2[i][2]+lines2[i][0]*Rcamera.image.cols)/lines2[i][1]),color);
+
+	}*/
+	namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
+	imshow(Lcamera.windowsName, Lcamera.image);
+
+	namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
+	imshow(Rcamera.windowsName, Rdst);
+
+	imwrite("Limage.jpg", Lcamera.image);
+	imwrite("Rimage.jpg", Rdst);
+
+	cout << Lcamera.image.size() << " " << Rdst.size() << " " << Rcamera.image.size() <<endl;
+
+	Lview=Lcamera.image;
+	Rview=Rdst;
+
+
+	waitKey(0);
+	createDisparity();
+}
 
 
 Mat EncontraCorrelacao(Mat imgL, Mat disp){

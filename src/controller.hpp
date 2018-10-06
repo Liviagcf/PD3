@@ -11,5 +11,6 @@ public:
  	std::vector<cv::Vec2f> points;
  	int clicks;
  	cv::Mat intrinsics, rotation, translation;
+ 	std::vector<float> distcoef;
 
 };

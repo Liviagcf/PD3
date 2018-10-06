@@ -7,6 +7,12 @@
 
 Controller::Controller(){
 	clicks = 0;
+
+	distcoef.push_back(0);
+	distcoef.push_back(0);
+	distcoef.push_back(0);
+	distcoef.push_back(0);
+	distcoef.push_back(0);
 }
 
 Controller::~Controller(){}

@@ -176,14 +176,30 @@ void requisito2(){
     Lcamera.windowsName = "Lcamera";
     Rcamera.windowsName = "Rcamera";
 
-    Lcamera.intrinsics = (Mat_<double>(3,3) << 6704.926882, 0,000103, 738.251932, 0, 6705.241311, 457.560286, 0, 0, 1);
-    Rcamera.intrinsics = (Mat_<double>(3,3) << 6682.125964, 0.000101, 875.207200, 0, 6681.475962, 357.700292, 0, 0, 1);
+    double data1[9] = {6704.926882, 0.000103, 738.251932, 0, 6705.241311, 457.560286, 0, 0, 1};
+    double data2[9] = {6682.125964, 0.000101, 875.207200, 0, 6681.475962, 357.700292, 0, 0, 1};
+    double data3[9] = {0.70717199,  0.70613396, -0.03581348, 0.28815232, -0.33409066, -0.89741388 ,-0.64565936,  0.62430623, -0.43973369};
+    double data4[9] = {0.48946344,  0.87099159, -0.04241701 ,0.33782142, -0.23423702, -0.91159734 ,-0.80392924,  0.43186419, -0.40889007};
+    double data5[3] = {-532.285900 , 207.183600 , 2977.408000};
+    double data6[3] = {-614.549000 , 193.240700 , 3242.754000}; 
 
-    Lcamera.rotation  = (Mat_<double>(3,3) << 0.70717199,  0.70613396, -0.03581348, 0.28815232, -0.33409066, -0.89741388 ,-0.64565936,  0.62430623, -0.43973369);
-    Lcamera.rotation  = (Mat_<double>(3,3) << 0.48946344,  0.87099159, -0.04241701 ,0.33782142, -0.23423702, -0.91159734 ,-0.80392924,  0.43186419, -0.40889007);
 
-    Lcamera.translation = (Mat_<double>(3,1) << -532.285900 , 207.183600 , 2977.408000);
-    Lcamera.translation = (Mat_<double>(3,1) << -614.549000 , 193.240700 , 3242.754000);
+    Lcamera.intrinsics = Mat(3,3,CV_64FC1, data1);
+   	Rcamera.intrinsics = Mat(3,3,CV_64FC1, data2);
+
+    Lcamera.rotation  = Mat(3,3,CV_64FC1, data3);
+    Rcamera.rotation  = Mat(3,3,CV_64FC1, data4);
+
+    Lcamera.translation = Mat(3,1,CV_64FC1, data5);
+    Rcamera.translation =Mat(3,1,CV_64FC1, data6);
+
+    Mat Linverse;
+	invert(Lcamera.rotation, Linverse, DECOMP_LU);
+
+    //Rotacao da camera da direita em relacao a camera da esquerda  R = Rl.inv * Rr,
+ 	//Translacao da camera da direita em relacao a da esquerda T = Rl.inv * (tr - tl).
+    Mat R = Linverse*Rcamera.rotation;
+    Mat T = Linverse*(Rcamera.translation - Lcamera.translation);
     
     namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
 	imshow(Lcamera.windowsName, Lcamera.image);
@@ -191,15 +207,40 @@ void requisito2(){
 	namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
 	imshow(Rcamera.windowsName, Rcamera.image);
 
-	setMouseCallback(Lcamera.windowsName, mouseClick, &Lcamera);
+	//setMouseCallback(Lcamera.windowsName, mouseClick, &Lcamera);
 
-	setMouseCallback(Rcamera.windowsName, mouseClick, &Rcamera);
+	//setMouseCallback(Rcamera.windowsName, mouseClick, &Rcamera);
 
-    while(Lcamera.points.size() < 4 || Rcamera.points.size() < 4){
+	waitKey(0);
+
+   /* while(Lcamera.points.size() < 1 || Rcamera.points.size() < 1){
    		waitKey(100);
-	}
+	}*/
 
 	cout<<"saiu"<<endl;
+
+	//Imagens precisam ter o mesmo tamanho
+	resize(Rcamera.image, Rcamera.image, Lcamera.image.size(),6682.125964*0.000101 ,6681.475962*0.000101, INTER_LINEAR); 
+	imshow(Rcamera.windowsName, Rcamera.image);
+	waitKey(0);
+
+	Mat R1, R2, P1, P2, Q, LMap1, LMap2, RMap1, RMap2, Lout, Rout;
+
+	stereoRectify(Lcamera.intrinsics, Lcamera.distcoef, Rcamera.intrinsics, Rcamera.distcoef, Lcamera.image.size(), R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, -1, Lcamera.image.size(), 0, 0 );
+
+	initUndistortRectifyMap(Lcamera.intrinsics, Lcamera.distcoef, R1, P1, Lcamera.image.size(),CV_32FC1, LMap1, LMap2);
+	initUndistortRectifyMap(Rcamera.intrinsics, Rcamera.distcoef, R2, P2, Lcamera.image.size(),CV_32FC1, RMap1, RMap2);
+
+	remap(Lcamera.image, Lout, LMap1, LMap2, INTER_LINEAR, BORDER_CONSTANT, 0);
+	remap(Rcamera.image, Rout, RMap1, RMap2, INTER_LINEAR, BORDER_CONSTANT, 0);
+
+	imshow(Lcamera.windowsName, Lout);
+	imshow(Rcamera.windowsName, Rout);
+
+	waitKey(0);
+
+
+
 
 /*
 	//Calcula epilines (funciona parcialmente)

@@ -376,6 +376,67 @@ void requisito1(){
 }
 
 
+float findVolume(vector<vector<float>> real){
+	float volume, A,B,C;		// Arestas
+
+	A = sqrt( (real[0][0]-real[1][0])*(real[0][0]-real[1][0]) + (real[0][1]-real[1][1])*(real[0][1]-real[1][1]) + (real[0][2]-real[1][2])*(real[0][2]-real[1][2]) );
+	B = sqrt( (real[2][0]-real[1][0])*(real[2][0]-real[1][0]) + (real[2][1]-real[1][1])*(real[2][1]-real[1][1]) + (real[2][2]-real[1][2])*(real[2][2]-real[1][2]) );
+	B = sqrt( (real[2][0]-real[3][0])*(real[2][0]-real[3][0]) + (real[2][1]-real[3][1])*(real[2][1]-real[3][1]) + (real[2][2]-real[3][2])*(real[2][2]-real[3][2]) );
+
+	volume = A*B*C;
+
+	cout << "A: " << real[0][0] << endl;
+	cout << "B: " << real[0][1] << endl;
+	cout << "C: " << real[0][2] << endl;
+
+	return volume;
+}
+
+
+void requisito3(){
+
+
+	Controller Rcamera, Lcamera;
+	Rcamera.image = imread("../data/aloeR.png");
+	Lcamera.image = imread("../data/aloeL.png");
+
+	Lcamera.windowsName = "Lcamera";
+    Rcamera.windowsName = "Rcamera";
+
+	vector<vector<float>> real;
+	Point point(0,0);
+	float xl,yl,xr,yr;
+	int i;
+
+	namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
+	imshow(Lcamera.windowsName, Lcamera.image);
+
+	namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
+	imshow(Rcamera.windowsName, Rcamera.image);
+
+	setMouseCallback(Lcamera.windowsName, mouseClick, &Lcamera);
+
+	setMouseCallback(Rcamera.windowsName, mouseClick, &Rcamera);
+
+    while(Lcamera.points.size() < 1 || Rcamera.points.size() < 1){
+   		waitKey(100);
+	}
+
+	for(i=0; i<1; i++){
+		xl = Lcamera.points[i][1];
+		yl = Lcamera.points[i][0];
+		xr = Rcamera.points[i][1];
+		yr = Rcamera.points[i][0];
+		
+		real.push_back(getWorldCoordinates(xl, xr, yl, yr));
+		cout << xl << endl;
+		cout << xr <<  endl;
+	}
+
+	//findVolume(real);
+}
+
+
 int main(){
 	requisito1();
 }

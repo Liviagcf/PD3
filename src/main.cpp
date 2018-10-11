@@ -397,15 +397,15 @@ void requisito3(){
 
 
 	Controller Rcamera, Lcamera;
-	Rcamera.image = imread("../data/aloeR.png");
-	Lcamera.image = imread("../data/aloeL.png");
+	Lcamera.image = imread("../data/MorpheusL.jpg");
+	Rcamera.image = imread("../data/MorpheusR.jpg");
 
 	Lcamera.windowsName = "Lcamera";
     Rcamera.windowsName = "Rcamera";
 
 	vector<vector<float>> real;
 	Point point(0,0);
-	float xl,yl,xr,yr;
+	float xl,yl,xr,yr, zl;
 	int i;
 
 	namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
@@ -414,26 +414,43 @@ void requisito3(){
 	namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
 	imshow(Rcamera.windowsName, Rcamera.image);
 
+	setMouseCallback(Rcamera.windowsName, mouseClick, &Rcamera);
 	setMouseCallback(Lcamera.windowsName, mouseClick, &Lcamera);
 
-	setMouseCallback(Rcamera.windowsName, mouseClick, &Rcamera);
+	float data1[12] = {6704.926882, 0.000103, 738.251932, 0, 0, 6705.241311, 457.560286, 0, 0, 0, 1, 0};
+    float data2[12] = {6682.125964, 0.000101, 875.207200, 0, 0, 6681.475962, 357.700292, 0, 0, 0, 1, 0};
 
-    while(Lcamera.points.size() < 1 || Rcamera.points.size() < 1){
+    Lcamera.intrinsics = Mat(3,4,CV_32FC1, data1);
+   	Rcamera.intrinsics = Mat(3,4,CV_32FC1, data2);
+
+   	Mat Pr_inv  = Rcamera.intrinsics.inv(DECOMP_SVD);
+
+   	float baseline = sqrt( (738.251932 - 875.207200)*(738.251932 - 875.207200) + (457.560286 - 357.700292)*(457.560286 - 357.700292) );
+
+    while(Rcamera.points.size() < 2 || Lcamera.points.size() < 2){
    		waitKey(100);
 	}
 
-	for(i=0; i<1; i++){
-		xl = Lcamera.points[i][1];
-		yl = Lcamera.points[i][0];
-		xr = Rcamera.points[i][1];
-		yr = Rcamera.points[i][0];
+	for(i=0; i<2; i++){
+		xr = Rcamera.points[i][0];
+		yr = Rcamera.points[i][1];
+		xl = Lcamera.points[i][0];
+		yl = Lcamera.points[i][1];
+
+		/*float datar[3] = {xr, yr, 1};
+		Mat R = Mat(3,1,CV_32FC1, datar);
+
+		Mat L = (Lcamera.intrinsics*Pr_inv)*R;
+		xl = L.at<float>(0,0);
+		yl = L.at<float>(1,0);*/
 		
-		real.push_back(getWorldCoordinates(xl, xr, yl, yr));
+		//Coloquei mais dois parâmetros pq a baseline e a distância focal são diferentes das outras imagens
+		//real.push_back(getWorldCoordinates(xl, xr, yl, yr, baseline, 6705));
 		cout << xl << endl;
-		cout << xr <<  endl;
+		cout << xr << endl;
 	}
 
-	//findVolume(real);
+	//cout << "Volume: " << findVolume(real) << endl;
 }
 
 

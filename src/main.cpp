@@ -454,6 +454,48 @@ void requisito3(){
 }
 
 
+void profundidade(){
+
+	Mat disp = imread("../data/aloe_disp.png");
+	Mat prof = disp.clone();
+	int i,j;
+	float min = 255, max = 0;
+	Mat profi = Mat(disp.rows, disp.cols, CV_8U);
+
+
+	for(i=0; i<disp.rows; i++){
+		for(j=0; j<disp.cols; j++){
+			prof.at<float>(i,j) = (b*f)/(2*(disp.at<float>(i,j)));
+		}
+	}
+
+	for(int j = 0; j < prof.rows; ++j){
+		for(int i = 0; i < prof.cols; ++i){
+
+			if(prof.at<float>(i,j) < min){
+				min = prof.at<float>(i,j);
+			}
+			if(prof.at<float>(i,j) > max){
+				max = prof.at<float>(i,j);
+			}
+		}
+	}
+
+	for(int j = 0; j<disp.rows; ++j){
+		for(int i = 0; i<disp.cols; ++i){
+			int a;
+			a = prof.at<float>(j,i);//*255/(max-min) - 255*min/(max-min);
+			profi.at<uchar>(j,i) = a;
+		}
+	}
+
+
+	namedWindow("Profundidade", WINDOW_NORMAL);
+	imshow("Profundidade", prof);
+	waitKey(0);
+}
+
+
 int main(){
 	requisito1();
 }

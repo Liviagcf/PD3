@@ -12,11 +12,13 @@ O relatório em Latex está dentro da pasta "Latex".
 
 Link para o trabalho no github: https://github.com/Liviagcf/PD3.
 
-Esse trabalho foi feito em Linux Xubuntu versão 18.04 e em Linux Ubuntu versão, ambos usando Opencv versão 3.2.0. 
+Esse trabalho foi feito em Linux Xubuntu versão 18.04 e em Linux Ubuntu versão 16.04, ambos usando Opencv versão 3.2.0. 
 O código foi feito em C++.
 
 
-Para desnormalizar os mapas de disparidade e prifundidade
+Para desnormalizar os mapas de disparidade e profundidade deve-se aplicar a fórmula inversa da normalização
+
+pixel_desnomalizado = (pixel_normalizado*(max-min)/255)-min
 
 
 # PD3

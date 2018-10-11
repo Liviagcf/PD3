@@ -10,7 +10,7 @@ public:
  	cv::Mat image;
  	std::vector<cv::Vec2f> points;
  	int clicks;
- 	cv::Mat intrinsics, rotation, translation;
+ 	cv::Mat intrinsics, rotation, translation, extrinsics, projection;
  	std::vector<float> distcoef;
 
 };

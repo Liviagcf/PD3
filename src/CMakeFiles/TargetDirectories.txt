@@ -1,0 +1,3 @@
+/home/natalia/PVC/PD3/src/CMakeFiles/edit_cache.dir
+/home/natalia/PVC/PD3/src/CMakeFiles/rebuild_cache.dir
+/home/natalia/PVC/PD3/src/CMakeFiles/pd3.dir

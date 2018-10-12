@@ -87,9 +87,10 @@ void createDepth(){
 
 	namedWindow("Profundidade", WINDOW_NORMAL);
 	imshow("Profundidade", normalized_depth);
-	imwrite("profundidade.png", normalized_depth);
+	imwrite("depth.png", normalized_depth);
 	cout << "Aperte uma tecla para continuar! " << endl;
 	waitKey(0);
+	destroyAllWindows();
 }
 
 
@@ -132,7 +133,7 @@ void createDisparity(){
 	minMaxLoc(disp2, &min, &max);
 	disp2.convertTo(normalized_disp, CV_8U, 255/(max-min), -255*min/(max-min));
 
-	imwrite("../data/disparidade.png", normalized_disp);
+	imwrite("../data/disp.png", normalized_disp);
 	namedWindow("Disparidade", WINDOW_NORMAL);
 	imshow("Disparidade", normalized_disp);
 	cout << "Aperte uma tecla para continuar! " << endl;
@@ -258,8 +259,8 @@ void uncalibratedRetification(){
 		circle(Rdst, Point(Rcamera.points[i][0],Rcamera.points[i][1]), 15, color, 10, 8, 0);
 	}
 
-	imwrite("epipolarL.png", Ldst);
-	imwrite("epipolarR.png", Rdst);
+	imwrite("../data/epipolarL.png", Ldst);
+	imwrite("../dataepipolarR.png", Rdst);
 
 	namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
 	imshow(Rcamera.windowsName, Rdst);
@@ -273,8 +274,8 @@ void uncalibratedRetification(){
 	warpPerspective(Rdst, Rdst, H1, Rcamera.image.size(), INTER_LINEAR , BORDER_CONSTANT);
 	warpPerspective(Ldst, Ldst, H2, Rcamera.image.size(),INTER_LINEAR , BORDER_CONSTANT);
 
-	imwrite("rectifiedepipolarL.png", Ldst);
-	imwrite("rectifiedepipolarR.png", Rdst);
+	imwrite("../data/rectifiedepipolarL.png", Ldst);
+	imwrite("../data/rectifiedepipolarR.png", Rdst);
 
 	namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
 	imshow(Lcamera.windowsName, Lcamera.image);
@@ -283,8 +284,8 @@ void uncalibratedRetification(){
 
 	waitKey(0);
 
-	imwrite("rectifiedL.png", Lcamera.image);
-	imwrite("rectifiedR.png", Rcamera.image);
+	imwrite("../data/rectifiedL.png", Lcamera.image);
+	imwrite("../data/rectifiedR.png", Rcamera.image);
 
 	destroyAllWindows();
 
@@ -361,7 +362,6 @@ void homography(){
    	destroyAllWindows();
 
 }
-
 
 
 float findVolume(vector<vector<float> > real){

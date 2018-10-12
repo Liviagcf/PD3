@@ -34,18 +34,19 @@ void mouseClick(int event, int x, int y, int flags, void* userdata){
 }
 
 
-vector<float> getWorldCoordinates(float xl, float xr, float yl, float yr){
+vector<float> getWorldCoordinates(float xl, float xr, float yl, float yr, float base, float fc){
 	float X,Y,Z;
 	float max;
 	vector<float> objectPoint;
 
-	X = ( b*(xl+xr) )/( 2*(xl-xr) );
-	Y = ( b*(yl+yr) )/( 2*(xl-xr) );
-	Z = ( b*f )/( 2*(xl-xr) );
+	X = ( base*(xl+xr) )/( 2*(xl-xr) );
+	Y = ( base*(yl+yr) )/( 2*(xl-xr) );
+	Z = ( base*fc )/( 2*(xl-xr) );
 	
 	objectPoint.push_back(X);
 	objectPoint.push_back(Y);
 	objectPoint.push_back(Z);
+	printf("X: %f\nY: %f\nZ: %f\n", X, Y, Z);
 	return objectPoint;
 }
 
@@ -66,7 +67,7 @@ void createDepth(){
 			xr = i - (int)disp2.at<uchar>(j, i);
 			yl = j;
 			yr = yl;
-			vector<float> objectPoint = getWorldCoordinates(xl, xr, yl, yr);
+			vector<float> objectPoint = getWorldCoordinates(xl, xr, yl, yr, b, f);
 			depth.at<int>(j,i) = objectPoint[2];
 			if(objectPoint[2] < min){
 				min = objectPoint[2];
@@ -389,8 +390,14 @@ void requisito3(){
 
 
 	Controller Rcamera, Lcamera;
-	Lcamera.image = imread("../data/MorpheusL.jpg");
-	Rcamera.image = imread("../data/MorpheusR.jpg");
+	Lcamera.image = imread("rectifiedL.png");
+	Rcamera.image = imread("rectifiedR.png");
+
+	if(!Lcamera.image.data || !Rcamera.image.data){
+        cout << endl << "Nao foi possivel abrir imagem ou ela não está nessa pasta!" << endl;
+        while (cin.get() != '\n');
+        return;
+    }
 
 	Lcamera.windowsName = "Lcamera";
     Rcamera.windowsName = "Rcamera";
@@ -419,30 +426,29 @@ void requisito3(){
 
    	float baseline = sqrt( (738.251932 - 875.207200)*(738.251932 - 875.207200) + (457.560286 - 357.700292)*(457.560286 - 357.700292) );
 
-    while(Rcamera.points.size() < 2 || Lcamera.points.size() < 2){
+    while(Rcamera.points.size() < 4 || Lcamera.points.size() < 4){
    		waitKey(100);
 	}
 
-	for(i=0; i<2; i++){
+	for(i=0; i<4; i++){
 		xr = Rcamera.points[i][0];
 		yr = Rcamera.points[i][1];
 		xl = Lcamera.points[i][0];
 		yl = Lcamera.points[i][1];
 
-		/*float datar[3] = {xr, yr, 1};
-		Mat R = Mat(3,1,CV_32FC1, datar);
-
-		Mat L = (Lcamera.intrinsics*Pr_inv)*R;
-		xl = L.at<float>(0,0);
-		yl = L.at<float>(1,0);*/
 		
-		//Coloquei mais dois parâmetros pq a baseline e a distância focal são diferentes das outras imagens
-		//real.push_back(getWorldCoordinates(xl, xr, yl, yr, baseline, 6705));
+		real.push_back(getWorldCoordinates(xl, xr, yl, yr, baseline, 6705));
 		cout << xl << endl;
 		cout << xr << endl;
+		cout << yl << endl;
+		cout << yr << endl;
 	}
 
-	//cout << "Volume: " << findVolume(real) << endl;
+	destroyAllWindows();
+	cout << "Volume: " << findVolume(real) << endl << endl;
+	cout << "Pressione [enter] para voltar ao menu";
+	while(getchar()!='\n');
+
 }
 
 
@@ -489,6 +495,8 @@ void profundidade(){
 	destroyAllWindows();
 }
 
+
+
 void requisito1(){
 	int escolha;
 	system("clear");
@@ -514,6 +522,8 @@ void requisito1(){
 	createDepth();
 }
 
+
+
 void requisito2(){
 	system("clear");
 	cout << "DISPARIDADE E PROFUNDIDADE DE IMAGENS NÃO RETIFICADAS" << endl << endl;
@@ -535,6 +545,7 @@ void menu(){
 		cout << "Sua escolha:";
 
 		cin >> escolha;
+		while(getchar()!='\n');
 
 		if(escolha == 1){
 			requisito1();
@@ -544,7 +555,7 @@ void menu(){
 			requisito2();
 		}
 		if(escolha == 3){
-			
+			requisito3();
 		}
 		if(escolha == 4){
 			stereoRetification();
@@ -564,4 +575,3 @@ int main(){
 	menu();
 	
 }
-

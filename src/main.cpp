@@ -87,7 +87,7 @@ void createDepth(){
 
 	namedWindow("Profundidade", WINDOW_NORMAL);
 	imshow("Profundidade", normalized_depth);
-	imwrite("depth.png", normalized_depth);
+	imwrite("../data/depth.png", normalized_depth);
 	cout << "Aperte uma tecla para continuar! " << endl;
 	waitKey(0);
 	destroyAllWindows();
@@ -95,7 +95,7 @@ void createDepth(){
 
 
 void createDisparity(){
-	cout << "Calculando disparidade ..." << endl;
+	
 
 	int minDisparity = 1;
 	int numDisparities = 128;
@@ -108,6 +108,10 @@ void createDisparity(){
 	int speckleWindowSize = 100;
 	int speckleRange = 20;
 	double min, max;
+
+	cout << "Digite o tamanho da janela de busca:";
+	cin >> SADWindowSize;
+	cout << "Calculando disparidade ..." << endl;
 
 	cvtColor(Lview, Lview,COLOR_RGB2GRAY, 0);
 	cvtColor(Rview, Rview,COLOR_RGB2GRAY, 0);

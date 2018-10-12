@@ -155,6 +155,8 @@ void stereoRetification(){
     }
     Lcamera.windowsName = "Lcamera";
     Rcamera.windowsName = "Rcamera";
+    namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
+	namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
 
     double data1[9] = {6704.926882, 0.000103, 738.251932, 0, 6705.241311, 457.560286, 0, 0, 1};
     double data2[9] = {6682.125964, 0.000101, 875.207200, 0, 6681.475962, 357.700292, 0, 0, 1};
@@ -173,24 +175,26 @@ void stereoRetification(){
     Lcamera.translation = Mat(3,1,CV_64FC1, data5);
     Rcamera.translation = Mat(3,1,CV_64FC1, data6);
 
-    Mat Rinverse;
-	invert(Rcamera.rotation, Rinverse, DECOMP_LU);
+    Mat Linverse;
+	invert(Lcamera.rotation, Linverse, DECOMP_LU);
 
     //Rotacao da camera da direita em relacao a camera da esquerda  R = Rl.inv * Rr,
  	//Translacao da camera da direita em relacao a da esquerda T = Rl.inv * (tr - tl).
-    Mat R = Rinverse*Lcamera.rotation;
-    Mat T = Rcamera.translation - (R*Lcamera.translation);
+    Mat R = Linverse*Rcamera.rotation;
+    Mat T = Linverse*(Rcamera.translation-Lcamera.translation);
     
 	resize(Rcamera.image, Rcamera.image, Lcamera.image.size(),6682.125964*0.000101 ,6681.475962*0.000101, INTER_LINEAR); 
 	imshow(Rcamera.windowsName, Rcamera.image);
+	imshow(Lcamera.windowsName, Lcamera.image);
+	cout<<"Pressione uma tecla " << endl;
 	waitKey(0);
 
 	Mat R1, R2, P1, P2, Q, LMap1, LMap2, RMap1, RMap2, Lout, Rout;
 
-	stereoRectify(Rcamera.intrinsics, Rcamera.distcoef, Lcamera.intrinsics, Lcamera.distcoef, Lcamera.image.size(), R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, -1, Lcamera.image.size(), 0,0 );
+	stereoRectify(Lcamera.intrinsics, Lcamera.distcoef, Rcamera.intrinsics, Rcamera.distcoef, Lcamera.image.size(), R, T, R1, R2, P1, P2, Q, CALIB_ZERO_DISPARITY, -1, Lcamera.image.size(), 0,0 );
 
-	initUndistortRectifyMap(Lcamera.intrinsics, Lcamera.distcoef, R2, P2, Lcamera.image.size(),CV_32FC1, LMap1, LMap2);
-	initUndistortRectifyMap(Rcamera.intrinsics, Rcamera.distcoef, R1, P1, Lcamera.image.size(),CV_32FC1, RMap1, RMap2);
+	initUndistortRectifyMap(Lcamera.intrinsics, Lcamera.distcoef, R1, P1, Lcamera.image.size(),CV_32FC1, LMap1, LMap2);
+	initUndistortRectifyMap(Rcamera.intrinsics, Rcamera.distcoef, R2, P2, Lcamera.image.size(),CV_32FC1, RMap1, RMap2);
 
 	remap(Lcamera.image, Lout, LMap1, LMap2, INTER_LINEAR, BORDER_CONSTANT, 0);
 	remap(Rcamera.image, Rout, RMap1, RMap2, INTER_LINEAR, BORDER_CONSTANT, 0);
@@ -198,12 +202,8 @@ void stereoRetification(){
 	imshow(Lcamera.windowsName, Lout);
 	imshow(Rcamera.windowsName, Rout);
 
-	Rview = Rcamera.image;
-	Lview = Lout;
-
-	//createDisparity();
-
 	waitKey(0);
+	destroyAllWindows();
 }
 
 
@@ -293,6 +293,73 @@ void uncalibratedRetification(){
 
 	createDisparity();
 	createDepth();
+}
+
+void homography(){
+	Controller Lcamera, Rcamera;
+
+	//Inicializando os dados
+	Lcamera.image = imread("../data/MorpheusL.jpg");
+	Rcamera.image = imread("../data/MorpheusR.jpg");
+
+	if(!Lcamera.image.data || !Rcamera.image.data){
+        cout << endl << "Nao foi possivel abrir imagem ou ela não está nessa pasta!" << endl;
+        while (cin.get() != '\n');
+        return;
+    }
+    Lcamera.windowsName = "Lcamera";
+    Rcamera.windowsName = "Rcamera";
+    namedWindow(Lcamera.windowsName, WINDOW_NORMAL);
+    namedWindow(Rcamera.windowsName, WINDOW_NORMAL);
+    imshow(Lcamera.windowsName, Lcamera.image);
+    imshow(Rcamera.windowsName, Rcamera.image);
+    cout<<"Pressione uma tecla " << endl;
+    waitKey();
+
+	double data1[9] = {6704.926882, 0.000103, 738.251932, 0, 6705.241311, 457.560286, 0, 0, 1};
+    double data2[9] = {6682.125964, 0.000101, 875.207200, 0, 6681.475962, 357.700292, 0, 0, 1};
+    double data3[12] = {0.70717199,  0.70613396, -0.03581348,-532.285900, 0.28815232, -0.33409066, -0.89741388 ,207.183600,-0.64565936,  0.62430623, -0.43973369,2977.408000};
+    double data4[12] = {0.48946344,  0.87099159, -0.04241701,-614.549000, 0.33782142, -0.23423702, -0.91159734 ,193.240700,-0.80392924,  0.43186419, -0.40889007,3242.754000};
+
+
+    Lcamera.intrinsics = Mat(3,3,CV_64FC1, data1);
+   	Rcamera.intrinsics = Mat(3,3,CV_64FC1, data2);
+
+   	Lcamera.extrinsics = Mat(3,4,CV_64FC1, data3);
+   	Rcamera.extrinsics = Mat(3,4,CV_64FC1, data4);
+
+   	Mat P1 = Lcamera.intrinsics*Lcamera.extrinsics;
+   	Mat P2 = Rcamera.intrinsics*Rcamera.extrinsics;
+
+   	Mat P1transpost, P2transpost;
+   	Mat P1seudoInverse, P2seudoInverse;
+   	Mat H1, H2;
+   	Mat dst1, dst2;
+
+
+   	transpose(P1, P1transpost);
+   	P1seudoInverse = P1transpost*P1;
+   	invert( P1seudoInverse, P1seudoInverse, DECOMP_LU);
+
+   	H1=P2*P1seudoInverse*P1transpost;
+
+
+    warpPerspective(Lcamera.image, dst1, H1, Lcamera.image.size(),INTER_LINEAR , BORDER_TRANSPARENT);
+
+   	transpose(P2, P2transpost);
+   	P2seudoInverse = P2transpost*P2;
+   	invert( P2seudoInverse, P2seudoInverse, DECOMP_LU);
+
+   	H2=P1*P2seudoInverse*P2transpost;
+
+    warpPerspective(Rcamera.image, dst2, H2, Lcamera.image.size(),INTER_LINEAR , BORDER_TRANSPARENT);
+
+	imshow(Lcamera.windowsName, dst1);
+	imshow(Rcamera.windowsName, dst2);
+   	
+   	waitKey();
+   	destroyAllWindows();
+
 }
 
 
@@ -452,13 +519,15 @@ void requisito2(){
 
 void menu(){
 	int escolha = 0;
-	while(escolha != 4){
+	while(escolha != 6){
 		system("clear");
 		cout << "IMAGENS STEREO" << endl << endl;
 		cout << "1- Mapa de disparidade e profundidade de imagens retificadas" << endl;
 		cout << "2- Mapa de disparidade e profundidade de imagens não retificadas" << endl;
 		cout << "3- Cálculo de volume" << endl;
-		cout << "4- Sair" << endl;
+		cout << "4- Tentativa de retificação usando a função stereoRectify" << endl;
+		cout << "5- Tentativa de retificação usando homografia" << endl;
+		cout << "6- Sair" << endl;
 		cout << "Sua escolha:";
 
 		cin >> escolha;
@@ -474,6 +543,12 @@ void menu(){
 			
 		}
 		if(escolha == 4){
+			stereoRetification();
+		}
+		if(escolha == 5){
+			homography();
+		}
+		if(escolha == 6){
 			break;
 		}
 	}
